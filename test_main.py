@@ -69,6 +69,20 @@ def test_product_price_setter(sample_product: Product, monkeypatch) -> None:
     assert sample_product.price == 120.0  # Цена не должна измениться
 
 
+def test_fully_private_price():
+    """Тест на полностью приватный атрибут цены"""
+    product = Product("Test", "Desc", 100.0, 5)
+
+    # Проверяем, что атрибут действительно приватный
+    with pytest.raises(AttributeError):
+        product.__price
+
+    # Проверяем работу через геттер/сеттер
+    assert product.price == 100.0
+    product.price = 150.0
+    assert product.price == 150.0
+
+
 def test_new_product_classmethod() -> None:
     product_data = {
         "name": "Test Product",

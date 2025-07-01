@@ -9,7 +9,7 @@ class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
         self.name = name
         self.description = description
-        self._price = price  # Приватный атрибут цены
+        self.__price = price  # Полностью приватный атрибут цены
         self.quantity = quantity
 
     @classmethod
@@ -24,8 +24,8 @@ class Product:
         for product in products_list:
             if product.name.lower() == product_data['name'].lower():
                 product.quantity += product_data['quantity']
-                if product_data['price'] > product.price:
-                    product.price = product_data['price']
+                if product_data['price'] > product.__price: # Полностью приватны атрибут
+                    product.__price = product_data['price']
                 return product
 
         return cls(
@@ -37,20 +37,20 @@ class Product:
 
     @property
     def price(self):
-        """Геттер для цены"""
-        return self._price
+        """Геттер для полностью приватного атрибута цены"""
+        return self.__price
 
     @price.setter
     def price(self, new_price):
         """Сеттер для цены с проверкой"""
         if new_price <= 0:
             print("Цена не должна быть нулевая или отрицательная")
-        elif new_price < self._price:  # Доп. задание к заданию 4
-            confirmation = input(f"Вы уверены, что хотите понизить цену с {self._price} до {new_price}? (y/n): ")
+        elif new_price < self.__price:  # Доп. задание к заданию 4
+            confirmation = input(f"Вы уверены, что хотите понизить цену с {self.__price} до {new_price}? (y/n): ")
             if confirmation.lower() == 'y':
-                self._price = new_price
+                self.__price = new_price
         else:
-            self._price = new_price
+            self.__price = new_price
 
 
 class Category:
