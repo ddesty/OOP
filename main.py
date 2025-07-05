@@ -1,4 +1,8 @@
 import json
+from typing import Any
+from typing import Dict
+from typing import Iterator
+from typing import List
 
 
 class Product:
@@ -6,22 +10,22 @@ class Product:
     Класс для представления продукта.
     """
 
-    def __init__(self, name: str, description: str, price: float, quantity: int):
+    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
         self.name = name
         self.description = description
         self.__price = price  # Полностью приватный атрибут цены
         self.quantity = quantity
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}, {self.__price} руб. Остаток: {self.quantity} шт."
 
-    def __add__(self, other):
-        if not isinstance(other, Product):
-            raise TypeError("Можно складывать только объекты Product")
+    def __add__(self, other: "Product") -> float:
+        if not isinstance(other, self.__class__):
+            raise TypeError("Нельзя складывать товары разных классов")
         return self.__price * self.quantity + other.__price * other.quantity
 
     @classmethod
-    def new_product(cls, product_data: dict, products_list=None):
+    def new_product(cls, product_data: Dict[str, Any], products_list: List["Product"] | None = None) -> "Product":
         """
         Класс-метод для создания нового продукта
         """
@@ -44,12 +48,12 @@ class Product:
         )
 
     @property
-    def price(self):
+    def price(self) -> float:
         """Геттер для полностью приватного атрибута цены"""
         return self.__price
 
     @price.setter
-    def price(self, new_price):
+    def price(self, new_price: float) -> None:
         """Сеттер для цены с проверкой"""
         if new_price <= 0:
             print("Цена не должна быть нулевая или отрицательная")
@@ -59,6 +63,42 @@ class Product:
                 self.__price = new_price
         else:
             self.__price = new_price
+
+
+class Smartphone(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+
+class LawnGrass(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
 
 
 class Category:
@@ -77,14 +117,14 @@ class Category:
         Category.category_count += 1
         Category.product_count += len(products)
 
-    def __str__(self):
+    def __str__(self) -> str:
         total_quantity = sum(product.quantity for product in self.__products)
         return f"{self.name}, количество продуктов: {total_quantity} шт."
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Product]:
         return CategoryIterator(self.__products)
 
-    def add_product(self, product):
+    def add_product(self, product: Product) -> None:
         """Метод для добавления продукта в категорию"""
         if isinstance(product, Product):
             self.__products.append(product)
@@ -93,20 +133,20 @@ class Category:
             raise TypeError("Можно добавлять только объекты класса Product")
 
     @property
-    def products(self):
+    def products(self) -> str:
         """Геттер для списка продуктов"""
         return "\n".join(str(product) for product in self.__products)
 
 
 class CategoryIterator:
-    def __init__(self, products):
+    def __init__(self, products: List[Product]) -> None:
         self.products = products
         self.index = 0
 
-    def __iter__(self):
+    def __iter__(self) -> "CategoryIterator":
         return self
 
-    def __next__(self):
+    def __next__(self) -> Product:
         if self.index < len(self.products):
             product = self.products[self.index]
             self.index += 1
