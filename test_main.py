@@ -1,7 +1,10 @@
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
-from main import Category  # Добавили импорт функции
+from main import Category
+from main import LawnGrass
 from main import Product
+from main import Smartphone
 from main import load_data_from_json
 
 
@@ -13,6 +16,16 @@ def sample_product() -> Product:
 @pytest.fixture
 def sample_category(sample_product: Product) -> Category:
     return Category("Test Category", "Test Description", [sample_product])
+
+
+@pytest.fixture
+def sample_smartphone() -> Smartphone:
+    return Smartphone("iPhone 15", "Flagship smartphone", 100000.0, 10, 3.5, "15 Pro", 256, "Space Gray")
+
+
+@pytest.fixture
+def sample_lawn_grass() -> LawnGrass:
+    return LawnGrass("Premium Grass", "High quality lawn grass", 500.0, 100, "Russia", 14, "Green")
 
 
 def test_product_init(sample_product: Product) -> None:
@@ -50,10 +63,12 @@ def test_add_product(sample_category: Category) -> None:
 
 def test_add_invalid_product(sample_category: Category) -> None:
     with pytest.raises(TypeError):
-        sample_category.add_product("not a product")
+        sample_category.add_product("not a product")  # type: ignore[arg-type]
+    with pytest.raises(TypeError):
+        sample_category.add_product(123)  # type: ignore[arg-type]
 
 
-def test_product_price_setter(sample_product: Product, monkeypatch) -> None:
+def test_product_price_setter(sample_product: Product, monkeypatch: MonkeyPatch) -> None:
     sample_product.price = 150.0
     assert sample_product.price == 150.0
 
@@ -72,7 +87,7 @@ def test_product_price_setter(sample_product: Product, monkeypatch) -> None:
     assert sample_product.price == 120.0  # Цена не должна измениться
 
 
-def test_fully_private_price():
+def test_fully_private_price() -> None:
     """Тест на полностью приватный атрибут цены"""
     product = Product("Test", "Desc", 100.0, 5)
 
@@ -130,31 +145,68 @@ def test_load_data_from_json(tmp_path):
 
 
 # Новые тесты для 14.3 (добавляем в конец файла)
-def test_product_str(sample_product: Product):
+def test_product_str(sample_product: Product) -> None:
     assert str(sample_product) == "Test Product, 100.0 руб. Остаток: 5 шт."
 
 
-def test_category_str(sample_category: Category):
+def test_category_str(sample_category: Category) -> None:
     assert str(sample_category) == "Test Category, количество продуктов: 5 шт."
 
 
-def test_product_addition(sample_product: Product):
+def test_product_addition(sample_product: Product) -> None:
     product2 = Product("Product 2", "Desc", 200.0, 3)
     assert sample_product + product2 == 100.0 * 5 + 200.0 * 3
 
 
-def test_product_addition_invalid(sample_product: Product):
+def test_product_addition_invalid(sample_product: Product) -> None:
     with pytest.raises(TypeError):
-        sample_product + "not a product"
+        sample_product + "not a product"  # type: ignore[operator]
 
 
-def test_category_iterator(sample_category: Category):
+def test_category_iterator(sample_category: Category) -> None:
     products = list(sample_category)
     assert len(products) == 1
     assert products[0].name == "Test Product"
 
 
-def test_category_iterator_empty():
+def test_category_iterator_empty() -> None:
     empty_category = Category("Empty", "Empty", [])
     products = list(empty_category)
     assert len(products) == 0
+
+
+# Новые тесты для 16.1
+def test_smartphone_init(sample_smartphone: Smartphone) -> None:
+    assert sample_smartphone.name == "iPhone 15"
+    assert sample_smartphone.efficiency == 3.5
+    assert sample_smartphone.model == "15 Pro"
+    assert sample_smartphone.memory == 256
+    assert sample_smartphone.color == "Space Gray"
+
+
+def test_lawn_grass_init(sample_lawn_grass: LawnGrass) -> None:
+    assert sample_lawn_grass.name == "Premium Grass"
+    assert sample_lawn_grass.country == "Russia"
+    assert sample_lawn_grass.germination_period == 14
+    assert sample_lawn_grass.color == "Green"
+
+
+def test_product_addition_different_types(sample_smartphone: Smartphone, sample_lawn_grass: LawnGrass) -> None:
+    with pytest.raises(TypeError):
+        sample_smartphone + sample_lawn_grass
+
+
+def test_add_valid_product_types(
+    sample_category: Category, sample_smartphone: Smartphone, sample_lawn_grass: LawnGrass
+) -> None:
+    initial_count = len(sample_category.products.split("\n"))
+    sample_category.add_product(sample_smartphone)
+    sample_category.add_product(sample_lawn_grass)
+    assert len(sample_category.products.split("\n")) == initial_count + 2
+
+
+def test_inheritance_relations() -> None:
+    assert issubclass(Smartphone, Product)
+    assert issubclass(LawnGrass, Product)
+    smartphone = Smartphone("Test", "Test", 100.0, 1, 1.0, "X", 128, "Black")
+    assert isinstance(smartphone, Product)
