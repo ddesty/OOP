@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
+from main import BaseProduct
 from main import Category
 from main import LawnGrass
 from main import Product
@@ -116,7 +119,7 @@ def test_new_product_duplicate() -> None:
     assert product.price == 100.0  # Более высокая цена
 
 
-def test_load_data_from_json(tmp_path):
+def test_load_data_from_json(tmp_path: Path) -> None:
     # Создаем временный JSON файл
     json_data = """
     [
@@ -210,3 +213,16 @@ def test_inheritance_relations() -> None:
     assert issubclass(LawnGrass, Product)
     smartphone = Smartphone("Test", "Test", 100.0, 1, 1.0, "X", 128, "Black")
     assert isinstance(smartphone, Product)
+
+
+# Тесты для 16.2
+def test_base_product_abstract_methods() -> None:
+    with pytest.raises(TypeError):
+        BaseProduct("Test", "Desc", 100.0, 5)  # type: ignore[abstract]
+
+
+def test_create_log_mixin_output(capsys: pytest.CaptureFixture[str]) -> None:
+    Product("LogTest", "Desc", 100.0, 2)
+    captured = capsys.readouterr()
+    assert "Создан объект класса Product с параметрами" in captured.out
+    assert "LogTest" in captured.out
