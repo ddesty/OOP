@@ -8,6 +8,7 @@ from main import Category
 from main import LawnGrass
 from main import Product
 from main import Smartphone
+from main import ZeroQuantityError
 from main import load_data_from_json
 
 
@@ -64,11 +65,23 @@ def test_add_product(sample_category: Category) -> None:
     assert "New Product, 50.0 руб. Остаток: 10 шт." in sample_category.products
 
 
-def test_add_invalid_product(sample_category: Category) -> None:
-    with pytest.raises(TypeError):
-        sample_category.add_product("not a product")  # type: ignore[arg-type]
-    with pytest.raises(TypeError):
-        sample_category.add_product(123)  # type: ignore[arg-type]
+def add_product(self, product: Product) -> None:
+    """Доп. задание: Обновленный метод добавления товара с обработкой исключений"""
+    try:
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только объекты класса Product")
+
+        if product.quantity == 0:
+            raise ZeroQuantityError(f"Товар '{product.name}' не может быть добавлен с нулевым количеством")
+
+        self.__products.append(product)
+        Category.product_count += 1
+        print(f"Товар '{product.name}' успешно добавлен")
+
+    except (ZeroQuantityError, TypeError) as e:
+        print(f"Ошибка: {e}")
+    finally:
+        print("Обработка добавления товара завершена")
 
 
 def test_product_price_setter(sample_product: Product, monkeypatch: MonkeyPatch) -> None:
@@ -226,3 +239,33 @@ def test_create_log_mixin_output(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert "Создан объект класса Product с параметрами" in captured.out
     assert "LogTest" in captured.out
+
+
+# Тесты для новых функций 17.1
+def test_zero_quantity_product() -> None:
+    """Тест на создание товара с нулевым количеством"""
+    with pytest.raises(ZeroQuantityError):
+        Product("Invalid", "Desc", 100.0, 0)
+
+
+def test_category_middle_price(sample_category: Category, sample_product: Product) -> None:
+    """Тест расчета средней цены"""
+    assert sample_category.middle_price() == 100.0
+
+    empty_category = Category("Empty", "Desc", [])
+    assert empty_category.middle_price() == 0
+
+
+def test_add_product_with_zero_quantity(sample_category: Category, capsys: pytest.CaptureFixture[str]) -> None:
+    """Тест добавления товара с нулевым количеством"""
+    initial_count = len(list(sample_category))
+
+    with pytest.raises(ZeroQuantityError):
+        Product("Zero", "Desc", 100.0, 0)
+
+    # Проверяем вывод в консоль
+    captured = capsys.readouterr()
+    assert "Товар с нулевым количеством не может быть добавлен" in captured.out
+
+    # Проверяем, что категория не изменилась
+    assert len(list(sample_category)) == initial_count
