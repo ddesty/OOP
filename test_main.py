@@ -8,7 +8,6 @@ from main import Category
 from main import LawnGrass
 from main import Product
 from main import Smartphone
-from main import ZeroQuantityError
 from main import load_data_from_json
 
 
@@ -63,25 +62,6 @@ def test_add_product(sample_category: Category) -> None:
     sample_category.add_product(new_product)
     assert len(sample_category.products.split("\n")) == initial_count + 1
     assert "New Product, 50.0 руб. Остаток: 10 шт." in sample_category.products
-
-
-def add_product(self, product: Product) -> None:
-    """Доп. задание: Обновленный метод добавления товара с обработкой исключений"""
-    try:
-        if not isinstance(product, Product):
-            raise TypeError("Можно добавлять только объекты класса Product")
-
-        if product.quantity == 0:
-            raise ZeroQuantityError(f"Товар '{product.name}' не может быть добавлен с нулевым количеством")
-
-        self.__products.append(product)
-        Category.product_count += 1
-        print(f"Товар '{product.name}' успешно добавлен")
-
-    except (ZeroQuantityError, TypeError) as e:
-        print(f"Ошибка: {e}")
-    finally:
-        print("Обработка добавления товара завершена")
 
 
 def test_product_price_setter(sample_product: Product, monkeypatch: MonkeyPatch) -> None:
@@ -244,7 +224,7 @@ def test_create_log_mixin_output(capsys: pytest.CaptureFixture[str]) -> None:
 # Тесты для новых функций 17.1
 def test_zero_quantity_product() -> None:
     """Тест на создание товара с нулевым количеством"""
-    with pytest.raises(ZeroQuantityError):
+    with pytest.raises(ValueError):
         Product("Invalid", "Desc", 100.0, 0)
 
 
@@ -260,12 +240,7 @@ def test_add_product_with_zero_quantity(sample_category: Category, capsys: pytes
     """Тест добавления товара с нулевым количеством"""
     initial_count = len(list(sample_category))
 
-    with pytest.raises(ZeroQuantityError):
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
         Product("Zero", "Desc", 100.0, 0)
-
-    # Проверяем вывод в консоль
-    captured = capsys.readouterr()
-    assert "Товар с нулевым количеством не может быть добавлен" in captured.out
-
-    # Проверяем, что категория не изменилась
+        # Проверяем, что категория не изменилась
     assert len(list(sample_category)) == initial_count

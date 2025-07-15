@@ -62,8 +62,7 @@ class Product(CreateLogMixin, BaseProduct):
     def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
         # Задание 1: Проверка нулевого количества
         if quantity == 0:
-            print("Товар с нулевым количеством не может быть добавлен")
-            raise ZeroQuantityError("Товар с нулевым количеством не может быть добавлен")
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
         super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
@@ -251,7 +250,7 @@ def load_data_from_json(filename: str) -> list[Category]:
 if __name__ == "__main__":
     try:
         product_invalid = Product("Бракованный товар", "Неверное количество", 1000.0, 0)
-    except ValueError as e:
+    except ValueError:
         print("Возникла ошибка ValueError при попытке добавить продукт с нулевым количеством")
     else:
         print("Не возникла ошибка ValueError при попытке добавить продукт с нулевым количеством")
